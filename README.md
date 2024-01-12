@@ -25,8 +25,6 @@ You can check all data used in the study in the data folder.
 ## Download
 The machine learning model and data used for training have been uploaded to this repository.
 
-Because the file size is limited to 25MB or less, the data used for the training was uploaded to the gz file. So use it after decompressing.
-
 
 <br/>
 
