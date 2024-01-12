@@ -26,7 +26,7 @@ from models_tumor_purity import *
 
 #### Data prepare ###
 # path
-data_folder = "/mnt/c/Users/laboratory/Documents/"
+data_folder = "data/"
 
 # miRNA & tumor purity merge (TCGA) [except STAD]
 tumor_type = ['BRCA','KIRC','UCEC','THCA','HNSC','LUAD','PRAD','LGG',
