@@ -11,6 +11,21 @@ Therefore, we found that the miRNA expression data could predict tumor purity we
 
 <br/>
 
+## Installation
+### Dependencies
+```
+python
+pandas
+numpy
+matplotlib
+warnings
+os
+sklearn
+openpyxl
+```
+
+<br/>
+
 ## Data
 
 The miRNA expression data for the TCGA and PCAWG cohorts can be accessed at https://gdc.xenahubs.net. 
