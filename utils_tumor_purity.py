@@ -4,25 +4,19 @@ import numpy as np
 import matplotlib.pyplot as plt
 import os
 import warnings
-
 from sklearn.model_selection import train_test_split
-from sklearn.model_selection import cross_val_score
-from sklearn.model_selection import GridSearchCV
-
-from sklearn import ensemble
-from sklearn.ensemble import RandomForestRegressor
-from sklearn.svm import SVR
-from sklearn import linear_model
-from sklearn.neighbors import KNeighborsRegressor
-from sklearn.neural_network import MLPRegressor
-
-from sklearn.preprocessing import StandardScaler
-from sklearn.pipeline import make_pipeline
-from sklearn.metrics import mean_squared_error
 
 
 #### Data combine [miRNA expression & Tumor purity] ####
 def miRNA_purity(data_folder, tumor_type):
+    """
+    Prepare miRNA expression and tumor purity data for a specific TCGA tumor type.
+    Args:
+        data_folder (str): Path to the folder containing the data files.
+        tumor_type (str): The type of tumor (e.g., 'BRCA', 'LUAD').
+    Returns:
+        pd.DataFrame: Merged DataFrame containing miRNA expression and tumor purity data.
+    """
     warnings.filterwarnings("ignore")
     # Prepare tumor purity data #
     purity = pd.read_excel(os.path.join(data_folder,"ncomms9971-s2.xlsx"), 
@@ -55,6 +49,14 @@ def miRNA_purity(data_folder, tumor_type):
 
 #### Each TCGA tumor type merge ####
 def model_data_merge(tumor_type):
+    """
+    Merge miRNA expression and tumor purity data for multiple TCGA tumor types.
+    Args:
+        tumor_type (list): List of tumor types (e.g., ['BRCA', 'LUAD']).
+    Returns:
+        pd.DataFrame: Concatenated DataFrame containing miRNA expression and tumor purity data for
+        all specified tumor types.
+    """
     list_tupu = []
     
     for i in tumor_type:
@@ -67,6 +69,13 @@ def model_data_merge(tumor_type):
 
 #### Train Test Data Split ####
 def Data_tr_te(data):
+    """
+    Split the dataset into training and testing sets.
+    Args:
+        data (pd.DataFrame): DataFrame containing miRNA expression and tumor purity data.
+    Returns:
+        tuple: Four DataFrames representing the training and testing sets for features and target values.
+    """
     # miRNA
     x = data.iloc[:, 1:len(data.columns)-1]
     # target values
@@ -80,6 +89,14 @@ def Data_tr_te(data):
 
 #### Feature importance ####
 def feature_importance(best_model, x_train):
+    """
+    Calculate feature importance from a trained Random Forest Regressor model.
+    Args:
+        best_model (RandomForestRegressor): Trained Random Forest Regressor model.
+        x_train (pd.DataFrame): Training features DataFrame.
+    Returns:
+        pd.DataFrame: DataFrame containing feature importance scores sorted in descending order.
+    """
 
     # get feature names
     X = x_train
@@ -96,6 +113,14 @@ def feature_importance(best_model, x_train):
 
 #### Top miRNA data processing ####
 def top_miRNA_Data_tr_ts(data, feature_importance):
+    """
+    Process the top miRNAs based on feature importance and split the data into training and testing sets.
+    Args:
+        data (pd.DataFrame): DataFrame containing miRNA expression and tumor purity data.
+        feature_importance (pd.DataFrame): DataFrame containing feature importance scores.
+    Returns:
+        tuple: Four lists containing training and testing sets for the top miRNAs and target values.
+    """
     top_x_train=[] 
     top_x_test=[] 
     top_y_train=[] 
@@ -120,6 +145,14 @@ def top_miRNA_Data_tr_ts(data, feature_importance):
 
 #### PCC (miRNA expression & tumor purity) ####
 def miRNA_CPE_pcc(top10_x, y):
+    """
+    Calculate the Pearson correlation coefficient (PCC) between miRNA expression and tumor purity.
+    Args:
+        top10_x (pd.DataFrame): DataFrame containing the top 10 miRNAs.
+        y (pd.Series): Series containing tumor purity values.
+    Returns:
+        pd.DataFrame: DataFrame containing the PCC values between each miRNA and tumor purity.
+    """
     miRNA = top10_x
     miRNA = miRNA.astype(float)
     CPE = y
@@ -134,6 +167,16 @@ def miRNA_CPE_pcc(top10_x, y):
 
 #### Scatter plot ####
 def scatter_plot(data_folder, plot_name, Obes, Pred):
+    """
+    Create a scatter plot of observed vs predicted tumor purity and calculate the Pearson correlation coefficient (PCC).
+    Args:
+        data_folder (str): Path to the folder where the plot will be saved.
+        plot_name (str): Name of the plot file.
+        Obes (list): List of observed tumor purity values.
+        Pred (list): List of predicted tumor purity values.
+    Returns:
+        float: Pearson correlation coefficient (PCC) between observed and predicted tumor purity.
+    """
     obes = pd.DataFrame(Obes)
     pred = pd.DataFrame(Pred)
     
@@ -174,6 +217,13 @@ def scatter_plot(data_folder, plot_name, Obes, Pred):
 
 #### PCAWG dataset processing [validation] ####
 def PCAWG_purity(data_folder):
+    """
+    Prepare PCAWG miRNA expression and tumor purity data.
+    Args:
+        data_folder (str): Path to the folder containing the PCAWG data files.
+    Returns:
+        pd.DataFrame: Merged DataFrame containing PCAWG miRNA expression and tumor purity data.
+    """
     warnings.filterwarnings("ignore")
     pcawg = pd.read_csv(os.path.join(data_folder,"x3t2m1.mature.UQ.mirna.matrix.log.txt"), sep ='\t', header = None)
     pcawg = pcawg.transpose()
