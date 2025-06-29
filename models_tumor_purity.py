@@ -1,21 +1,9 @@
 #### Package load ####
-import pandas as pd
-import numpy as np
-import matplotlib.pyplot as plt
-import warnings
-import os
-
-from sklearn.model_selection import train_test_split
-from sklearn.model_selection import cross_val_score
-from sklearn.model_selection import GridSearchCV
-
-from sklearn import ensemble
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.svm import SVR
 from sklearn import linear_model
 from sklearn.neighbors import KNeighborsRegressor
 from sklearn.neural_network import MLPRegressor
-
 from sklearn.preprocessing import StandardScaler
 from sklearn.pipeline import make_pipeline
 from sklearn.metrics import mean_squared_error
@@ -23,6 +11,17 @@ from sklearn.metrics import mean_squared_error
 
 #### Random Forest Regression model ####
 def RFR(x_train, x_test, y_train, y_test):
+    """
+    Train a Random Forest Regressor model and evaluate its performance.
+    Args:
+        x_train (pd.DataFrame): Training features DataFrame.
+        x_test (pd.DataFrame): Testing features DataFrame.
+        y_train (pd.DataFrame): Training target values DataFrame.
+        y_test (pd.DataFrame): Testing target values DataFrame.
+    Returns:
+        tuple: Best model, predictions on the test set, and mean squared error on the test
+        set.
+    """
     
     # best parameter model
     best_model = RandomForestRegressor(max_depth=20, n_estimators=500, n_jobs=-1)
@@ -42,6 +41,16 @@ def RFR(x_train, x_test, y_train, y_test):
 
 #### Using Top 1 ~ 10 miRNA for 8 Machine learning tools ####
 def ML_8(top_x_train, top_x_test, y_train, y_test):
+    """
+    Train and evaluate 8 different machine learning models using the top miRNAs.
+    Args:
+        top_x_train (pd.DataFrame): Training features DataFrame with top miRNAs.
+        top_x_test (pd.DataFrame): Testing features DataFrame with top miRNAs.
+        y_train (pd.DataFrame): Training target values DataFrame.
+        y_test (pd.DataFrame): Testing target values DataFrame.
+    Returns:
+        None: Prints the mean squared error for each model.
+    """
     
     #### 1. Random Forest Regression model ####
     

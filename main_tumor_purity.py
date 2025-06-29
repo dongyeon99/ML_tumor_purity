@@ -1,25 +1,8 @@
 #### Package load ####
 import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
-import warnings
-import os
-
 from sklearn.model_selection import train_test_split
-from sklearn.model_selection import cross_val_score
-from sklearn.model_selection import GridSearchCV
-
-from sklearn import ensemble
-from sklearn.ensemble import RandomForestRegressor
-from sklearn.svm import SVR
-from sklearn import linear_model
-from sklearn.neighbors import KNeighborsRegressor
-from sklearn.neural_network import MLPRegressor
-
-from sklearn.preprocessing import StandardScaler
-from sklearn.pipeline import make_pipeline
 from sklearn.metrics import mean_squared_error
-
 from utils_tumor_purity import *
 from models_tumor_purity import *
 
