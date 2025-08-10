@@ -40,10 +40,15 @@ Each file can be download using the links provided below.
 | TCGA-UCEC.mirna.tsv                   | https://gdc-hub.s3.us-east-1.amazonaws.com/download/TCGA-UCEC.mirna.tsv.gz                |
 | TCGA-UCS.mirna.tsv                    | https://gdc-hub.s3.us-east-1.amazonaws.com/download/TCGA-UCS.mirna.tsv.gz                 |
 | TCGA-UVM.mirna.tsv                    | https://gdc-hub.s3.us-east-1.amazonaws.com/download/TCGA-UVM.mirna.tsv.gz                 |
-| ncomms9971-s2.xlsx                    | https://pmc.ncbi.nlm.nih.gov/articles/PMC4671203/#S1 [Supplementary Data 1]               |
+| ncomms9971-s2.xlsx                    | https://pmc.ncbi.nlm.nih.gov/articles/PMC4671203 [Supplementary Data 1]               |
 | x3t2m1.mature.UQ.mirna.matrix.log.txt | https://pcawg-hub.s3.us-east-1.amazonaws.com/download/x3t2m1.mature.UQ.mirna.matrix.log   |
 | consensus.20170217.purity.ploidy_sp   | https://pcawg-hub.s3.us-east-1.amazonaws.com/download/consensus.20170217.purity.ploidy_sp |
 
+To download the data from the given link on linux, you can use the curl command as follows:
+
+```
+curl -O https://pcawg-hub.s3.us-east-1.amazonaws.com/download/x3t2m1.mature.UQ.mirna.matrix.log
+```
 
 ## Explain Datasets
 
