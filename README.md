@@ -13,15 +13,9 @@ Therefore, we found that the miRNA expression data could predict tumor purity we
 
 ## Installation
 ### Dependencies
+Tested with Python 3.9.
 ```
-python
-pandas
-numpy
-matplotlib
-warnings
-os
-sklearn
-openpyxl
+pip install -r requirements.txt
 ```
 
 <br/>

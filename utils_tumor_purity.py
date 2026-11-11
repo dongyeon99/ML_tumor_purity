@@ -7,19 +7,17 @@ import warnings
 from sklearn.model_selection import train_test_split
 
 
-#### Data combine [miRNA expression & Tumor purity] ####
-def miRNA_purity(data_folder, tumor_type):
+#### Tumor purity (CPE) data ####
+def load_cpe(data_folder):
     """
-    Prepare miRNA expression and tumor purity data for a specific TCGA tumor type.
+    Load TCGA tumor purity (CPE) values from Aran et al. supplementary data.
     Args:
         data_folder (str): Path to the folder containing the data files.
-        tumor_type (str): The type of tumor (e.g., 'BRCA', 'LUAD').
     Returns:
-        pd.DataFrame: Merged DataFrame containing miRNA expression and tumor purity data.
+        pd.DataFrame: DataFrame with 'Sample ID' and float 'CPE' columns, NaN rows removed.
     """
     warnings.filterwarnings("ignore")
-    # Prepare tumor purity data #
-    purity = pd.read_excel(os.path.join(data_folder,"ncomms9971-s2.xlsx"), 
+    purity = pd.read_excel(os.path.join(data_folder,"ncomms9971-s2.xlsx"),
                       header = None)
 
     purity = purity.iloc[3:, :]
@@ -31,40 +29,48 @@ def miRNA_purity(data_folder, tumor_type):
     # Remove Nan value
     CPE = CPE.dropna(axis = 0)
     CPE.reset_index(drop=True, inplace=True)
+    CPE['CPE'] = CPE['CPE'].astype(float)
 
-    # Prepare miRNA expression data #
+    return CPE
+
+
+#### Data combine [miRNA expression & Tumor purity] ####
+def miRNA_purity(data_folder, tumor_type, CPE):
+    """
+    Prepare miRNA expression and tumor purity data for a specific TCGA tumor type.
+    Args:
+        data_folder (str): Path to the folder containing the data files.
+        tumor_type (str): The type of tumor (e.g., 'BRCA', 'LUAD').
+        CPE (pd.DataFrame): Tumor purity data from load_cpe().
+    Returns:
+        pd.DataFrame: Merged DataFrame containing miRNA expression and tumor purity data.
+    """
     miRNA = pd.read_csv(os.path.join(data_folder,"TCGA-{}.mirna.tsv".format(tumor_type)), sep ='\t', header = None)
-    
+
     miRNA = miRNA.transpose()
     miRNA_header = miRNA.iloc[0]
     miRNA = miRNA.iloc[1:]
     miRNA.columns = miRNA_header
     miRNA.rename(columns={'miRNA_ID':'Sample ID'}, inplace=True)
-    
+    # header=None reads every value as a string
+    miRNA = miRNA.set_index('Sample ID').astype(float).reset_index()
+
     # Merge miRNA & tumor purity data
-    globals()['{}_cpe'.format(tumor_type)] = pd.merge(miRNA, CPE, how = 'inner',on = 'Sample ID')
-    
-    return globals()['{}_cpe'.format(tumor_type)]
+    return pd.merge(miRNA, CPE, how = 'inner',on = 'Sample ID')
 
 
 #### Each TCGA tumor type merge ####
-def model_data_merge(tumor_type):
+def model_data_merge(data, tumor_type):
     """
     Merge miRNA expression and tumor purity data for multiple TCGA tumor types.
     Args:
+        data (dict): Tumor type -> DataFrame from miRNA_purity().
         tumor_type (list): List of tumor types (e.g., ['BRCA', 'LUAD']).
     Returns:
         pd.DataFrame: Concatenated DataFrame containing miRNA expression and tumor purity data for
         all specified tumor types.
     """
-    list_tupu = []
-    
-    for i in tumor_type:
-        list_tupu.append(globals()['{}_cpe'.format(i)])
-        
-    dataset = pd.concat(list_tupu)
-    
-    return dataset
+    return pd.concat([data[i] for i in tumor_type])
 
 
 #### Train Test Data Split ####
@@ -83,7 +89,7 @@ def Data_tr_te(data):
 
     # split data
     x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.30, random_state=42)
-    
+
     return x_train, x_test, y_train, y_test
 
 
@@ -97,17 +103,11 @@ def feature_importance(best_model, x_train):
     Returns:
         pd.DataFrame: DataFrame containing feature importance scores sorted in descending order.
     """
-
-    # get feature names
-    X = x_train
-    feature_names = X.columns.tolist()
-    
-    # Feature importance from RFR
-    feature_importance = pd.DataFrame(best_model.feature_importances_, index = feature_names)
-    feature_importance_sort = feature_importance.sort_values(by=0, 
-                                                             axis=0, 
+    feature_importance = pd.DataFrame(best_model.feature_importances_, index = x_train.columns.tolist())
+    feature_importance_sort = feature_importance.sort_values(by=0,
+                                                             axis=0,
                                                              ascending=False)
-    
+
     return feature_importance_sort
 
 
@@ -121,25 +121,23 @@ def top_miRNA_Data_tr_ts(data, feature_importance):
     Returns:
         tuple: Four lists containing training and testing sets for the top miRNAs and target values.
     """
-    top_x_train=[] 
-    top_x_test=[] 
-    top_y_train=[] 
+    top_x_train=[]
+    top_x_test=[]
+    top_y_train=[]
     top_y_test=[]
     y = data['CPE']
-    
+
     for i in range(10):
-        globals()['top{}'.format(i)] = list(feature_importance.index[0:i+1])
-        globals()['top{}_x'.format(i)] = data[globals()['top{}'.format(i)]]
-        
+        top_x = data[list(feature_importance.index[0:i+1])]
+
         # split data
-        globals()['top{}_x_train'.format(i)], globals()['top{}_x_test'.format(i)], y_train, y_test = train_test_split(globals()['top{}_x'.format(i)],y, test_size=0.30, random_state=42)
-        
-        top_x_train.append(globals()['top{}_x_train'.format(i)]) 
-        top_x_test.append(globals()['top{}_x_test'.format(i)]) 
-        
-        top_y_train.append(y_train) 
+        x_train, x_test, y_train, y_test = train_test_split(top_x, y, test_size=0.30, random_state=42)
+
+        top_x_train.append(x_train)
+        top_x_test.append(x_test)
+        top_y_train.append(y_train)
         top_y_test.append(y_test)
-        
+
     return top_x_train, top_x_test, top_y_train, top_y_test
 
 
@@ -153,15 +151,11 @@ def miRNA_CPE_pcc(top10_x, y):
     Returns:
         pd.DataFrame: DataFrame containing the PCC values between each miRNA and tumor purity.
     """
-    miRNA = top10_x
-    miRNA = miRNA.astype(float)
-    CPE = y
-    CPE = CPE.astype(float)
-    PCC_miRNA_CPE = pd.concat([miRNA, CPE], axis=1)
-    
+    PCC_miRNA_CPE = pd.concat([top10_x.astype(float), y.astype(float)], axis=1)
+
     PCC_miRNA_CPE_matrix = PCC_miRNA_CPE.corr()
     PCC = PCC_miRNA_CPE_matrix[['CPE']]
-    
+
     return PCC
 
 
@@ -179,18 +173,26 @@ def scatter_plot(data_folder, plot_name, Obes, Pred):
     """
     obes = pd.DataFrame(Obes)
     pred = pd.DataFrame(Pred)
-    
+
     obes.columns = ['CPE']
     obes['CPE'] = obes['CPE'].astype(float)
     pred.columns = ['predict']
-    
+
     obes = obes.reset_index(drop=True)
     pred = pred.reset_index(drop=True)
-    
+
     # obes & pred PCC
     pcc = obes['CPE'].corr(pred['predict'])
     print("PCC:", pcc)
-    
+
+    # plot font size (set before drawing so every plot uses the same size)
+    small_size = 15
+    large_size = 20
+
+    plt.rc('axes', labelsize=small_size)   # x,y axis label font size
+    plt.rc('figure', titlesize=large_size) # figure title font size
+
+    plt.figure()
     plt.scatter(obes['CPE'], pred['predict'], s=3)
 
     #regression line
@@ -201,17 +203,10 @@ def scatter_plot(data_folder, plot_name, Obes, Pred):
     plt.xlabel('Observed tumor purity')
     plt.ylabel('Predicted tumor purity')
 
-    # plot font size
-    small_size = 15
-    large_size = 20
-
-    plt.rc('axes', labelsize=small_size)   # x,y axis label font size
-    plt.rc('figure', titlesize=large_size) # figure title font size
-    #plt.show()
-
     # save plot
     plt.savefig(os.path.join(data_folder,"Scatter_plot_{}.png".format(plot_name)) , dpi=300)
-    
+    plt.close()
+
     return pcc
 
 
@@ -232,11 +227,13 @@ def PCAWG_purity(data_folder):
     pcawg = pcawg.iloc[1:]
     pcawg.columns = pcawg_header
     pcawg.rename(columns={'mirna.name':'Sample ID'}, inplace=True)
+    # header=None reads every value as a string
+    pcawg = pcawg.set_index('Sample ID').astype(float).reset_index()
 
     pcawg_purity = pd.read_csv(os.path.join(data_folder,"consensus.20170217.purity.ploidy_sp"), sep ='\t')
     pcawg_purity = pcawg_purity[['samplename', 'purity']]
     pcawg_purity.rename(columns={'samplename':'Sample ID'}, inplace=True)
 
     PCAWG = pd.merge(pcawg, pcawg_purity, how = 'inner',on = 'Sample ID')
-    
+
     return PCAWG
