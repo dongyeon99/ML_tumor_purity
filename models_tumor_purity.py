@@ -8,6 +8,9 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.pipeline import make_pipeline
 from sklearn.metrics import mean_squared_error
 
+# Fixed seed so RF/MLP results are reproducible across runs
+SEED = 42
+
 
 #### Random Forest Regression model ####
 def RFR(x_train, x_test, y_train, y_test):
@@ -22,20 +25,20 @@ def RFR(x_train, x_test, y_train, y_test):
         tuple: Best model, predictions on the test set, and mean squared error on the test
         set.
     """
-    
+
     # best parameter model
-    best_model = RandomForestRegressor(max_depth=20, n_estimators=500, n_jobs=-1)
-    
+    best_model = RandomForestRegressor(max_depth=20, n_estimators=500, n_jobs=-1, random_state=SEED)
+
     # Train model
     best_model.fit(x_train, y_train.values.ravel())
-    
+
     # Prediction
     best_model_pred = best_model.predict(x_test)
-        
+
     # Score
     MSE_test = mean_squared_error(y_test, best_model_pred)
-    print("MSE_test:", MSE_test)  
-    
+    print("MSE_test:", MSE_test)
+
     return best_model, best_model_pred, MSE_test
 
 
@@ -49,106 +52,25 @@ def ML_8(top_x_train, top_x_test, y_train, y_test):
         y_train (pd.DataFrame): Training target values DataFrame.
         y_test (pd.DataFrame): Testing target values DataFrame.
     Returns:
-        None: Prints the mean squared error for each model.
+        dict: Model name -> mean squared error on the test set.
     """
-    
-    #### 1. Random Forest Regression model ####
-    
-    RFR = RandomForestRegressor(max_depth = 20, n_estimators = 500, n_jobs = -1)
-    RFR.fit(top_x_train, y_train.values.ravel())
+    models = {
+        "RFR": RandomForestRegressor(max_depth = 20, n_estimators = 500, n_jobs = -1, random_state = SEED),
+        "Linear": linear_model.LinearRegression(n_jobs = -1),
+        "Lasso": linear_model.Lasso(alpha = 0.000774263682681127, max_iter = 1000),
+        "Ridge": linear_model.Ridge(alpha = 1.0, max_iter = 1000),
+        "ElasticNet": linear_model.ElasticNet(alpha = 0.002154434690031882, l1_ratio = 0.55),
+        "SVR": make_pipeline(StandardScaler(), SVR(C = 0.5, gamma = 'auto', kernel = 'rbf')),
+        "KNR": KNeighborsRegressor(algorithm = 'ball_tree', leaf_size = 25,
+                                   n_neighbors = 9, weights = 'distance', n_jobs = -1),
+        "MLP": MLPRegressor(activation = 'logistic', solver = 'lbfgs',
+                            learning_rate = 'adaptive', alpha = 1, random_state = SEED),
+    }
 
-    # Predict
-    RFR_pred = RFR.predict(top_x_test)
-    RFR_pred
+    mse = {}
+    for name, model in models.items():
+        model.fit(top_x_train, y_train.values.ravel())
+        mse[name] = mean_squared_error(y_test, model.predict(top_x_test))
+        print("{}_MSE_test: ".format(name), mse[name])
 
-    # score
-    mse_RFR_test = mean_squared_error(y_test, RFR_pred)
-    print("RFR_MSE_test: ", mse_RFR_test)
-    
-    #### 2. Lienar Regression model ####
-    
-    Linear = linear_model.LinearRegression(n_jobs= -1)
-    Linear.fit(top_x_train, y_train.values.ravel())
-
-    # Predict
-    Linear_pred = Linear.predict(top_x_test)
-
-    # Score
-    mse_Linear_test = mean_squared_error(y_test, Linear_pred)
-    print("Linear_MSE_test: ", mse_Linear_test)
-    
-    #### 3. Lasso Regression model ####
-    
-    Lasso = linear_model.Lasso(alpha = 0.000774263682681127, max_iter = 1000)
-    Lasso.fit(top_x_train, y_train.values.ravel())
-
-    # Predict
-    Lasso_pred = Lasso.predict(top_x_test)
-
-    # Score
-    mse_Lasso_test = mean_squared_error(y_test, Lasso_pred)
-    print("Lasso_MSE_test: ", mse_Lasso_test)
-    
-    #### 4. Ridge model ####
-    
-    Ridge = linear_model.Ridge(alpha = 1.0, max_iter = 1000)
-    Ridge.fit(top_x_train, y_train.values.ravel())
-
-    # Predict
-    Ridge_pred = Ridge.predict(top_x_test)
-
-    # Score
-    mse_Ridge_test = mean_squared_error(y_test, Ridge_pred)
-    print("Ridge_MSE_test: ", mse_Ridge_test)
-    
-    #### 5. ElasticNet model ####
-    
-    ElasticNet = linear_model.ElasticNet(alpha = 0.002154434690031882, l1_ratio = 0.55)
-    ElasticNet.fit(top_x_train, y_train.values.ravel())
-
-    # Predict
-    ElasticNet_pred = ElasticNet.predict(top_x_test)
-
-    # Score
-    mse_ElasticNet_test = mean_squared_error(y_test, ElasticNet_pred)
-    print("ElasticNet_MSE_test: ", mse_ElasticNet_test)
-    
-    #### 6. SVR model ####
-    
-    svr = make_pipeline(StandardScaler(), SVR(C = 0.5, gamma = 'auto', kernel = 'rbf'))
-    svr.fit(top_x_train, y_train.values.ravel())
-
-    # Predict
-    svr_pred = svr.predict(top_x_test)
-
-    # Score
-    mse_svr_test = mean_squared_error(y_test, svr_pred)
-    print("SVR_MSE_test: ", mse_svr_test)
-    
-    #### 7. KNR model ####
-    
-    kneighbor = KNeighborsRegressor(algorithm = 'ball_tree', leaf_size = 25,
-                                   n_neighbors = 9, weights = 'distance', n_jobs = -1)
-    kneighbor.fit(top_x_train, y_train.values.ravel())
-
-    # Predict
-    kneighbor_pred = kneighbor.predict(top_x_test)
-
-    # Score
-    mse_kneighbor_test = mean_squared_error(y_test, kneighbor_pred)
-    print("KNR_MSE_test: ", mse_kneighbor_test)
-    
-    #### 8. MLP model ####
-    # Train MLP model
-    MLP = MLPRegressor(activation = 'logistic', solver = 'lbfgs',
-                      learning_rate = 'adaptive', alpha = 1)
-    MLP.fit(top_x_train, y_train.values.ravel())
-
-    # Predict
-    MLP_pred = MLP.predict(top_x_test)
-
-    # Score
-    mse_MLP_test = mean_squared_error(y_test, MLP_pred)
-    print("MLP_MSE_test:",mse_MLP_test)
-
-
+    return mse
